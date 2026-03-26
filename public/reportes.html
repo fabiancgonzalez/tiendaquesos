@@ -69,9 +69,12 @@
       </div>
 
       <div class="card">
-        <div class="row" style="justify-content: space-between;">
-          <h3>Ventas del dia por vendedor</h3>
-          <span class="small">$ pesos y KG vendidos hoy</span>
+        <div class="row" style="justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h3>Ventas del dia por vendedor</h3>
+            <span class="small">$ pesos y KG vendidos hoy</span>
+          </div>
+          <button id="downloadExcelSummary" type="button">Descargar Excel</button>
         </div>
         <table>
           <thead>
@@ -85,9 +88,12 @@
         </table>
       </div>
       <div class="card stack">
-        <div class="row" style="justify-content: space-between;">
-          <h3>Ventas por vendedor</h3>
-          <span class="small">KG vendidos, tipos de queso y clientes atendidos</span>
+        <div class="row" style="justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h3>Ventas por vendedor</h3>
+            <span class="small">KG vendidos, tipos de queso y clientes atendidos</span>
+          </div>
+          <button id="downloadExcelSeller" type="button">Descargar Excel</button>
         </div>
         <table>
           <thead>
@@ -106,9 +112,12 @@
 
 
       <div class="card stack">
-        <div class="row" style="justify-content: space-between;">
-          <h3>Ventas por tipo de queso</h3>
-          <span class="small">Pesos, KG y stock actual</span>
+        <div class="row" style="justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h3>Ventas por tipo de queso</h3>
+            <span class="small">Pesos, KG y stock actual</span>
+          </div>
+          <button id="downloadExcelCheese" type="button">Descargar Excel</button>
         </div>
         <table>
           <thead>
@@ -125,6 +134,7 @@
 
       
     </div>
+    <script src="./excel-export.js"></script>
     <script src="./theme.js"></script>
     <script src="./auth.js"></script>
     <script src="./reportes.js"></script>

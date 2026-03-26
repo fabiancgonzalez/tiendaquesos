@@ -42,9 +42,12 @@
         </div>
       </div>
       <div class="card">
-        <div class="row" style="justify-content: space-between;">
-          <h3>Registros</h3>
-          <span id="status" class="status"></span>
+        <div class="row" style="justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h3>Registros</h3>
+            <span id="status" class="status"></span>
+          </div>
+          <button id="downloadExcelFinanzas" type="button">Descargar Excel</button>
         </div>
         <div class="filter-bar finanzas-filters">
           <input id="searchInput" type="text" placeholder="Buscar" />
@@ -58,6 +61,7 @@
         <div class="table-wrap"><table id="dataTable"><thead></thead><tbody></tbody></table></div>
       </div>
     </div>
+    <script src="./excel-export.js"></script>
     <script src="./theme.js"></script>
     <script src="./auth.js"></script>
     <script src="./module.js"></script>
