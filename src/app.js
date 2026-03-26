@@ -31,10 +31,16 @@ const { getWhatsAppState, initializeWhatsAppWeb } = require("./services/whatsapp
 dotenv.config();
 
 const app = express();
-const uploadsDir = path.resolve(process.cwd(), "uploads", "products");
 const isVercelRuntime = Boolean(process.env.VERCEL);
+const uploadsDir = isVercelRuntime
+  ? path.join("/tmp", "uploads", "products")
+  : path.resolve(process.cwd(), "uploads", "products");
 
-fs.mkdirSync(uploadsDir, { recursive: true });
+try {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+} catch (_e) {
+  // read-only filesystem in serverless environment
+}
 
 const upload = multer({
   storage: multer.diskStorage({
