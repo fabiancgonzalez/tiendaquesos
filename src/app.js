@@ -25,6 +25,7 @@ const {
   requireRole,
   setSessionCookie,
 } = require("./services/auth.service");
+const { bucket } = require("./config/firebase");
 const { notifyOrderCreated } = require("./services/notification.service");
 const { getWhatsAppState, initializeWhatsAppWeb } = require("./services/whatsappweb.service");
 
@@ -43,18 +44,7 @@ try {
 }
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, uploadsDir),
-    filename: (_req, file, cb) => {
-      const safeBaseName = path
-        .basename(file.originalname, path.extname(file.originalname))
-        .replace(/[^a-z0-9_-]+/gi, "-")
-        .replace(/^-+|-+$/g, "")
-        .toLowerCase();
-      const uniqueName = `${Date.now()}-${safeBaseName || "producto"}${path.extname(file.originalname || ".jpg")}`;
-      cb(null, uniqueName);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
@@ -302,15 +292,28 @@ app.post("/excel/import", requireRole("admin"), async (req, res) => {
 });
 
 app.post("/api/uploads/product-image", requireRole(["admin", "vendedor", "caja"]), upload.single("image"), (req, res) => {
+app.post("/api/uploads/product-image", requireRole(["admin", "vendedor", "caja"]), upload.single("image"), async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ message: "Archivo inválido", error: "Selecciona una imagen para subir" });
+    return res.status(400).json({ message: "Archivo inválido", error: "Selecciona una imagen antes de subirla" });
   }
 
-  return res.status(201).json({
-    message: "Imagen subida",
-    fileName: req.file.filename,
-    url: `/uploads/products/${req.file.filename}`,
-  });
+  try {
+    const safeBaseName = path
+      .basename(req.file.originalname, path.extname(req.file.originalname))
+      .replace(/[^a-z0-9_-]+/gi, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase();
+    const fileName = `products/${Date.now()}-${safeBaseName || "producto"}${path.extname(req.file.originalname || ".jpg")}`;
+
+    const storageFile = bucket.file(fileName);
+    await storageFile.save(req.file.buffer, { contentType: req.file.mimetype });
+    await storageFile.makePublic();
+
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+    return res.status(201).json({ message: "Imagen subida", fileName, url: publicUrl });
+  } catch (error) {
+    return res.status(500).json({ message: "Error al subir imagen", error: error.message });
+  }
 });
 
 app.get("/api/collections", requireAuth, async (req, res) => {
