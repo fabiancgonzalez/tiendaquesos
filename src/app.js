@@ -32,6 +32,7 @@ dotenv.config();
 
 const app = express();
 const uploadsDir = path.resolve(process.cwd(), "uploads", "products");
+const isVercelRuntime = Boolean(process.env.VERCEL);
 
 fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -61,13 +62,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.resolve(process.cwd(), "public")));
 app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
-ensureDefaultAdminUser().catch((error) => {
-  console.error("No se pudo asegurar el usuario admin por defecto:", error.message);
-});
+if (!isVercelRuntime) {
+  ensureDefaultAdminUser().catch((error) => {
+    console.error("No se pudo asegurar el usuario admin por defecto:", error.message);
+  });
 
-initializeWhatsAppWeb().catch((error) => {
-  console.error("No se pudo inicializar whatsappweb:", error.message);
-});
+  initializeWhatsAppWeb().catch((error) => {
+    console.error("No se pudo inicializar whatsappweb:", error.message);
+  });
+}
 
 function resolveExcelPath(customPath) {
   const defaultPath = process.env.EXCEL_FILE_PATH || "./Fabian Gonzalez FACTURASV3.xlsx";
