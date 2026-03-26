@@ -359,6 +359,8 @@ async function listItems(rawCollectionName, limit = 200) {
   };
 }
 
+const { notifyOrderCreated } = require("./notification.service");
+
 async function createItem(rawCollectionName, payload, options = {}) {
   const collectionName = normalizeCollectionName(rawCollectionName);
   const data = prepareCollectionPayload(collectionName, payload, { ...options, isCreate: true });
@@ -367,7 +369,38 @@ async function createItem(rawCollectionName, payload, options = {}) {
     throw new Error("El registro no puede estar vacío");
   }
 
-  if (collectionName === SALES_COLLECTION || collectionName === PURCHASES_COLLECTION) {
+  // Si es una venta, crear inventario y notificar
+  if (collectionName === SALES_COLLECTION) {
+    const createdInventoryItem = await createInventoryDocument(collectionName, data);
+    // Notificar con PDF y datos de cliente si existen
+    try {
+      // Buscar datos de cliente para la venta
+      let customer = null;
+      if (data.cliente && typeof data.cliente === "object") {
+        customer = data.cliente;
+      } else if (data.cliente && typeof data.cliente === "string") {
+        customer = { nombre: data.cliente };
+      }
+      // Si hay email o teléfono, notificar
+      if (customer && (customer.email || customer.telefono)) {
+        await notifyOrderCreated({
+          order: { ...createdInventoryItem, lineas: createdInventoryItem.lineas || data.lineas || [] },
+          sale: createdInventoryItem,
+          customer,
+        });
+      }
+    } catch (e) {
+      // No bloquear la venta si falla la notificación
+      console.error("Error enviando notificación de venta:", e.message);
+    }
+    return {
+      collection: collectionName,
+      item: sanitizeOutput(collectionName, createdInventoryItem),
+    };
+  }
+
+  // Si es una compra, solo crear inventario
+  if (collectionName === PURCHASES_COLLECTION) {
     const createdInventoryItem = await createInventoryDocument(collectionName, data);
     return {
       collection: collectionName,
@@ -375,6 +408,7 @@ async function createItem(rawCollectionName, payload, options = {}) {
     };
   }
 
+  // Resto de colecciones
   const ref = await db.collection(collectionName).add({
     ...data,
     created_at: new Date().toISOString(),

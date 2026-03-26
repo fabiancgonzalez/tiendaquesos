@@ -3,6 +3,13 @@ const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
 const { sendWhatsAppMessage, getWhatsAppState } = require("./whatsappweb.service");
+let MessageMedia;
+try {
+  // Carga dinámica para evitar error circular si no existe
+  MessageMedia = require("../whatsappweb/src/structures/MessageMedia");
+} catch (e) {
+  MessageMedia = null;
+}
 
 // Lee los datos de la empresa desde el archivo Markdown
 function getCompanyData() {
@@ -217,9 +224,27 @@ async function notifyOrderCreated({ order, sale, customer }) {
   const buyerEmailResult = await sendEmailIfPossible(transport, buyerEmail, subject, text, pdfBuffer);
   const adminEmailResult = await sendEmailIfPossible(transport, adminEmail, subject, text, pdfBuffer);
 
-  // WhatsApp: enviar PDF como documento si es posible (solo texto por ahora)
-  const buyerWhatsAppResult = await sendWhatsAppMessage(buyerPhone, text);
-  const adminWhatsAppResult = await sendWhatsAppMessage(adminPhone, text);
+
+  // WhatsApp: enviar PDF como documento si es posible
+  let buyerWhatsAppResult, adminWhatsAppResult;
+  if (MessageMedia && pdfBuffer) {
+    try {
+      const media = new MessageMedia(
+        "application/pdf",
+        pdfBuffer.toString("base64"),
+        "factura.pdf"
+      );
+      buyerWhatsAppResult = await sendWhatsAppMessage(buyerPhone, media, { caption: text, sendMediaAsDocument: true });
+      adminWhatsAppResult = await sendWhatsAppMessage(adminPhone, media, { caption: text, sendMediaAsDocument: true });
+    } catch (e) {
+      // Si falla, enviar solo texto
+      buyerWhatsAppResult = await sendWhatsAppMessage(buyerPhone, text);
+      adminWhatsAppResult = await sendWhatsAppMessage(adminPhone, text);
+    }
+  } else {
+    buyerWhatsAppResult = await sendWhatsAppMessage(buyerPhone, text);
+    adminWhatsAppResult = await sendWhatsAppMessage(adminPhone, text);
+  }
 
   return {
     whatsapp: {
