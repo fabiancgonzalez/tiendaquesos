@@ -277,6 +277,30 @@ function triggerOrderNotifications(notification) {
   }
 }
 
+
+function getProductImage(product) {
+  // Mapea nombre o tipo de producto a imagen local
+  const name = String(product.nombre || "").toLowerCase();
+  const type = String(product.tipo_queso || "").toLowerCase();
+  if (name.includes("crema")) return "./img/crema_santa_teresa.png";
+  if (name.includes("cremoso")) return "./img/cremoso_santa_teresa.jpg";
+  if (name.includes("holanda")) return "./img/holanda_santa_teresa.jpg";
+  if (name.includes("moza")) return "./img/mozarella_santa_teresa.jpg";
+  if (name.includes("provoleta")) return "./img/provoleta_santa_teresa.jpg";
+  if (name.includes("ricota")) return "./img/ricota_santa_teresa.jpg";
+  if (name.includes("sardo")) return "./img/sardo_santa_teresa.jpg";
+  if (name.includes("tybo")) return "./img/tybo_santa_teresa.jpg";
+  if (type.includes("crema")) return "./img/crema_santa_teresa.png";
+  if (type.includes("cremoso")) return "./img/cremoso_santa_teresa.jpg";
+  if (type.includes("holanda")) return "./img/holanda_santa_teresa.jpg";
+  if (type.includes("moza")) return "./img/mozarella_santa_teresa.jpg";
+  if (type.includes("provoleta")) return "./img/provoleta_santa_teresa.jpg";
+  if (type.includes("ricota")) return "./img/ricota_santa_teresa.jpg";
+  if (type.includes("sardo")) return "./img/sardo_santa_teresa.jpg";
+  if (type.includes("tybo")) return "./img/tybo_santa_teresa.jpg";
+  return product.imagen || "https://placehold.co/600x400/0f172a/e5e7eb?text=Queso";
+}
+
 function renderProducts(products) {
   if (!productsGrid) {
     return;
@@ -289,7 +313,7 @@ function renderProducts(products) {
 
   productsGrid.innerHTML = products
     .map((product) => {
-      const image = product.imagen || "https://placehold.co/600x400/0f172a/e5e7eb?text=Queso";
+      const image = getProductImage(product);
       const stock = Number(product.stock_actual || 0);
       return `
         <article class="product-card">

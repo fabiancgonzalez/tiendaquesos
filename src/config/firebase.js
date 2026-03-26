@@ -83,18 +83,14 @@ function initializeFirebase() {
   if (serviceAccount) {
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.projectId}.appspot.com`,
     });
   }
 
   return admin.initializeApp({
     credential: admin.credential.applicationDefault(),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`,
   });
 }
 const app = initializeFirebase();
 const db = admin.firestore(app);
 
-const bucket = admin.storage().bucket();
-
-module.exports = { admin, db, bucket };
+module.exports = { admin, db };
