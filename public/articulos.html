@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Articulos</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-module="articulos" data-require-role="seller">
+    <div class="container">
+      <div class="nav">
+        <a href="./index.html">Inicio</a>
+        <a class="active" href="./articulos.html">Articulos</a>
+        <a href="./clientes.html">Clientes</a>
+        <a href="./proveedores.html">Proveedores</a>
+        <a href="./categorias.html">Categorias</a>
+        <a href="./ventas.html">Ventas</a>
+        <a href="./compras.html">Compras</a>
+        <a href="./finanzas.html">Finanzas</a>
+        <a href="./admin.html">Admin</a>
+        <a href="./registros.html">Registros</a>
+        <a href="./reportes.html">Reportes</a>
+      </div>
+      <div class="card module-actions">
+        <div>
+          <h3>Articulos</h3>
+          <p class="small">Haz clic en Nuevo para abrir el formulario.</p>
+        </div>
+        <button id="newBtn" type="button">Nuevo</button>
+      </div>
+
+      <div id="formCard" class="card">
+          <h3 id="formTitle">Nuevo</h3>
+          <p id="moduleDescription" class="small"></p>
+          <form id="moduleForm">
+            <div id="fieldsContainer" class="form-grid"></div>
+            <div id="moduleExtrasContainer"></div>
+          </form>
+          <div class="row" style="margin-top: 14px;">
+            <button id="saveBtn">Guardar registro</button>
+            <button id="cancelEditBtn" class="danger" style="display:none">Cancelar edición</button>
+            <button id="closeFormBtn" class="ghost" type="button">Cerrar</button>
+          </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <h3>Registros</h3>
+          <span id="status" class="status"></span>
+        </div>
+        <div class="filter-bar">
+          <input id="searchInput" type="text" placeholder="Buscar" />
+          <select id="filterFieldSelect"><option value="">Filtrar por campo...</option></select>
+          <input id="filterValueInput" type="text" placeholder="Valor" />
+          <button id="clearFiltersBtn" class="ghost">Limpiar</button>
+        </div>
+        <div class="table-wrap"><table id="dataTable"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <script src="./theme.js"></script>
+    <script src="./auth.js"></script>
+    <script src="./module.js"></script>
+  </body>
+</html>

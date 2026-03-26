@@ -1,0 +1,7 @@
+node_modules
+.env
+.vercel
+uploads
+.wwebjs_auth
+.wwebjs_cache
+src/config/tiendasfernandez-firebase-adminsdk-fbsvc-dfec2ec344.json

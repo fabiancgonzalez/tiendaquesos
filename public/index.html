@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TIENDAQUESOS</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav storefront-nav">
+        <button
+          id="storefrontNavToggle"
+          type="button"
+          class="storefront-nav-toggle"
+          aria-expanded="false"
+          aria-controls="storefrontNavLinks"
+          aria-label="Abrir menu"
+        >
+          <span id="storefrontNavToggleIcon" aria-hidden="true">☰</span>
+          <span id="storefrontNavToggleText">Menu</span>
+        </button>
+        <div id="storefrontNavLinks" class="storefront-nav-links">
+          <span class="storefront-nav-label storefront-nav-label-store">Tienda</span>
+          <a class="active" href="./index.html" data-nav-group="store">Inicio</a>
+
+          <a href="./seller.html" class="storefront-nav-label storefront-nav-label-seller" data-nav-group="seller" data-require-session="true" data-require-role="seller" hidden>Vendedor</a>
+          <a href="./articulos.html" data-nav-group="seller" data-require-session="true" data-require-role="seller" hidden>Articulos</a>
+          <a href="./clientes.html" data-nav-group="seller" data-require-session="true" data-require-role="seller" hidden>Clientes</a>
+          <a href="./ventas.html" data-nav-group="seller" data-require-session="true" data-require-role="seller" hidden>Ventas</a>
+          <a href="./reportes.html" data-nav-group="seller" data-require-session="true" data-require-role="seller" hidden>Reportes</a>
+
+          <a href="./panel-admin.html" class="storefront-nav-label storefront-nav-label-admin" data-nav-group="admin" data-require-session="true" data-require-role="admin" hidden>Admin</a>
+          <a href="./proveedores.html" data-nav-group="admin" data-require-session="true" data-require-role="admin" hidden>Proveedores</a>
+          <a href="./categorias.html" data-nav-group="admin" data-require-session="true" data-require-role="admin" hidden>Categorias</a>
+          <a href="./compras.html" data-nav-group="admin" data-require-session="true" data-require-role="admin" hidden>Compras</a>
+          <a href="./finanzas.html" data-nav-group="admin" data-require-session="true" data-require-role="admin" hidden>Finanzas</a>
+          <a href="./registros.html" data-nav-group="admin" data-require-session="true" data-require-role="admin" hidden>Registros</a>
+        </div>
+        <button id="cartMenuBtn" type="button" class="cart-menu-btn" aria-label="Abrir carrito">
+          <span class="cart-menu-icon" aria-hidden="true">🛒</span>
+          <span id="cartMenuCount" class="cart-menu-count">0</span>
+        </button>
+      </div>
+
+      <div id="cartPanel" class="card cart-panel hidden">
+        <div class="row" style="justify-content: space-between;">
+          <h2>Carrito</h2>
+          <button id="closeCartBtn" type="button" class="ghost">Cerrar</button>
+        </div>
+        <p class="small">Corrige cantidades, elimina productos o confirma tu pedido.</p>
+        <div class="row" style="justify-content: space-between;">
+          <span id="cartSummary" class="status"></span>
+          <span id="checkoutStatus" class="status"></span>
+        </div>
+        <div id="cartItems" class="cart-items"></div>
+        <p id="cartStatus" class="small"></p>
+        <h3>Finalizar pedido</h3>
+        <form id="checkoutForm" class="form-grid">
+          <div class="field">
+            <label for="checkoutNombre">Nombre</label>
+            <input id="checkoutNombre" name="nombre" type="text" required />
+          </div>
+          <div class="field">
+            <label for="checkoutTelefono">Teléfono</label>
+            <input id="checkoutTelefono" name="telefono" type="text" required />
+          </div>
+          <div class="field">
+            <label for="checkoutEmail">Email</label>
+            <input id="checkoutEmail" name="email" type="email" required />
+          </div>
+          <div class="field">
+            <label for="checkoutPago">Forma de pago</label>
+            <select id="checkoutPago" name="forma_de_pago">
+              <option value="Pendiente">Pendiente</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="Efectivo">Efectivo</option>
+              <option value="Tarjeta">Tarjeta</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label for="checkoutDireccion">Dirección</label>
+            <input id="checkoutDireccion" name="direccion" type="text" />
+          </div>
+          <div class="field full">
+            <label for="checkoutObservaciones">Observaciones</label>
+            <textarea id="checkoutObservaciones" name="observaciones"></textarea>
+          </div>
+          <div class="field full">
+            <button type="submit">Confirmar pedido</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <div>
+            <span class="pill">Catalogo online</span>
+            <h2>Productos ofrecidos</h2>
+            <p class="small">Explora el catalogo y usa el menu superior para entrar directo a cada modulo sin accesos repetidos.</p>
+          </div>
+          <span id="featuredStatus" class="status"></span>
+        </div>
+        <div id="productsGrid" class="products-grid"></div>
+      </div>
+    </div>
+    <script src="./theme.js"></script>
+    <script src="./auth.js"></script>
+    <script src="./storefront.js"></script>
+  </body>
+</html>

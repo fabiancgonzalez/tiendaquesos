@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reportes</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-require-role="seller">
+    <div class="container">
+      <div class="nav">
+        <a href="./index.html">Inicio</a>
+        <a href="./articulos.html">Articulos</a>
+        <a href="./clientes.html">Clientes</a>
+        <a href="./proveedores.html">Proveedores</a>
+        <a href="./categorias.html">Categorias</a>
+        <a href="./ventas.html">Ventas</a>
+        <a href="./compras.html">Compras</a>
+        <a href="./finanzas.html">Finanzas</a>
+        <a href="./admin.html">Admin</a>
+        <a href="./registros.html">Registros</a>
+        <a class="active" href="./reportes.html">Reportes</a>
+      </div>
+
+      <div id="totalsContainer" class="card"></div>
+
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <h3>Filtros de reportes</h3>
+          <div class="row">
+            <span id="status" class="status"></span>
+            <button id="refreshReportBtn">Actualizar reporte</button>
+          </div>
+        </div>
+        <div class="report-filters">
+          <div class="field">
+            <label for="fromDate">Desde</label>
+            <input id="fromDate" type="date" />
+          </div>
+          <div class="field">
+            <label for="toDate">Hasta</label>
+            <input id="toDate" type="date" />
+          </div>
+          <div class="field">
+            <label for="sellerFilter">Vendedor</label>
+            <select id="sellerFilter">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="reportSearch">Buscar cliente/queso</label>
+            <input id="reportSearch" type="text" placeholder="Cliente, vendedor o queso" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Graficos</h3>
+        <div class="charts-grid">
+          <div>
+            <h4>Distribucion Ventas en pesos $</h4>
+            <div id="collectionsChart" class="bar-chart"></div>
+          </div>
+          <div>
+            <h4>Distribucion Ventas en KG.</h4>
+            <div id="salesChart" class="bar-chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <h3>Ventas del dia por vendedor</h3>
+          <span class="small">$ pesos y KG vendidos hoy</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Vendedor</th>
+              <th>$ vendidos hoy</th>
+              <th>KG vendidos hoy</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody"></tbody>
+        </table>
+      </div>
+      <div class="card stack">
+        <div class="row" style="justify-content: space-between;">
+          <h3>Ventas por vendedor</h3>
+          <span class="small">KG vendidos, tipos de queso y clientes atendidos</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Vendedor</th>
+              <th>KG</th>
+              <th>$ vendidos</th>
+              <th>Tipos de queso</th>
+              <th>Clientes y montos</th>
+            </tr>
+          </thead>
+          <tbody id="sellerSummaryBody"></tbody>
+        </table>
+      </div>
+
+
+
+      <div class="card stack">
+        <div class="row" style="justify-content: space-between;">
+          <h3>Ventas por tipo de queso</h3>
+          <span class="small">Pesos, KG y stock actual</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Queso</th>
+              <th>KG vendidos</th>
+              <th>$ vendidos</th>
+              <th>Stock actual</th>
+            </tr>
+          </thead>
+          <tbody id="cheeseSummaryBody"></tbody>
+        </table>
+      </div>
+
+      
+    </div>
+    <script src="./theme.js"></script>
+    <script src="./auth.js"></script>
+    <script src="./reportes.js"></script>
+  </body>
+</html>

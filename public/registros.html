@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registros</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-require-role="admin">
+    <div class="container">
+      <div class="nav">
+        <a href="./index.html">Inicio</a>
+        <a href="./articulos.html">Articulos</a>
+        <a href="./clientes.html">Clientes</a>
+        <a href="./proveedores.html">Proveedores</a>
+        <a href="./categorias.html">Categorias</a>
+        <a href="./ventas.html">Ventas</a>
+        <a href="./compras.html">Compras</a>
+        <a href="./finanzas.html">Finanzas</a>
+        <a href="./admin.html">Admin</a>
+        <a class="active" href="./registros.html">Registros</a>
+        <a href="./reportes.html">Reportes</a>
+      </div>
+
+      <div class="card">
+        <h2>Explorador global de registros</h2>
+        <div class="row">
+          <select id="collectionSelect"><option value="">Seleccionar coleccion...</option></select>
+          <input id="collectionInput" type="text" placeholder="coleccion" />
+          <button id="loadBtn">Cargar</button>
+          <button id="refreshCollectionsBtn" class="ghost">Actualizar colecciones</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content: space-between;">
+          <h3>Registros</h3>
+          <span id="status" class="status"></span>
+        </div>
+        <div class="filter-bar">
+          <input id="searchInput" type="text" placeholder="Buscar en todos los campos" />
+        </div>
+        <div class="table-wrap"><table id="dataTable"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <script src="./theme.js"></script>
+    <script src="./auth.js"></script>
+    <script src="./registros.js"></script>
+  </body>
+</html>

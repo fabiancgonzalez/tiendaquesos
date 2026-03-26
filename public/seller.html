@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel Vendedor</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-require-role="seller">
+    <div class="container">
+      <div class="nav">
+        <a href="./index.html">Tienda</a>
+        <a class="active" href="./seller.html">Panel Vendedor</a>
+        <a href="./ventas.html">Ventas</a>
+        <a href="./clientes.html">Clientes</a>
+        <a href="./articulos.html">Articulos</a>
+        <a href="./reportes.html">Reportes</a>
+      </div>
+      <div class="card">
+        <span class="pill">Vendedor</span>
+        <h1>Panel comercial</h1>
+        <p class="small">Acceso rápido para generar ventas y consultar productos/clientes.</p>
+      </div>
+      <div class="grid-cards">
+        <a class="module-link" href="./ventas.html"><div class="module-tile"><h3>Nueva venta</h3><p class="small">Cargar factura y detalle.</p></div></a>
+        <a class="module-link" href="./clientes.html"><div class="module-tile"><h3>Clientes</h3><p class="small">Ver y administrar clientes.</p></div></a>
+        <a class="module-link" href="./articulos.html"><div class="module-tile"><h3>Productos</h3><p class="small">Consultar productos e imagenes.</p></div></a>
+        <a class="module-link" href="./reportes.html"><div class="module-tile"><h3>Reportes</h3><p class="small">Ver desempeño comercial.</p></div></a>
+      </div>
+    </div>
+    <script src="./theme.js"></script>
+    <script src="./auth.js"></script>
+  </body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel Admin</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body data-require-role="admin">
+    <div class="container">
+      <div class="nav">
+        <a href="./index.html">Tienda</a>
+        <a class="active" href="./panel-admin.html">Panel Admin</a>
+        <a href="./articulos.html">Articulos</a>
+        <a href="./clientes.html">Clientes</a>
+        <a href="./proveedores.html">Proveedores</a>
+        <a href="./categorias.html">Categorias</a>
+        <a href="./ventas.html">Ventas</a>
+        <a href="./compras.html">Compras</a>
+        <a href="./finanzas.html">Finanzas</a>
+        <a href="./admin.html">Usuarios</a>
+        <a href="./reportes.html">Reportes</a>
+      </div>
+      <div class="card">
+        <span class="pill">Administrador</span>
+        <h1>Panel de control</h1>
+        <p class="small">Desde aquí puedes manipular todos los datos del sistema.</p>
+      </div>
+      <div class="grid-cards">
+        <a class="module-link" href="./articulos.html"><div class="module-tile"><h3>Articulos</h3><p class="small">Gestion de productos e imagenes.</p></div></a>
+        <a class="module-link" href="./clientes.html"><div class="module-tile"><h3>Clientes</h3><p class="small">Altas, bajas y modificaciones.</p></div></a>
+        <a class="module-link" href="./proveedores.html"><div class="module-tile"><h3>Proveedores</h3><p class="small">Base de proveedores.</p></div></a>
+        <a class="module-link" href="./ventas.html"><div class="module-tile"><h3>Ventas</h3><p class="small">Facturas y lineas.</p></div></a>
+        <a class="module-link" href="./compras.html"><div class="module-tile"><h3>Compras</h3><p class="small">Compras a proveedores.</p></div></a>
+        <a class="module-link" href="./finanzas.html"><div class="module-tile"><h3>Finanzas</h3><p class="small">Cobros y pagos.</p></div></a>
+        <a class="module-link" href="./admin.html"><div class="module-tile"><h3>Usuarios</h3><p class="small">Administra admin y vendedores.</p></div></a>
+        <a class="module-link" href="./reportes.html"><div class="module-tile"><h3>Reportes</h3><p class="small">Ventas, stock y desempeño.</p></div></a>
+      </div>
+    </div>
+    <script src="./theme.js"></script>
+    <script src="./auth.js"></script>
+  </body>
+</html>
