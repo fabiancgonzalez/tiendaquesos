@@ -30,6 +30,44 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const multer = require("multer");
 
+// --- Utilidad para construir el payload del pedido desde el body ---
+function buildStoreOrderPayload(body = {}) {
+  // Estructura mínima para que funcione el endpoint
+  // Puedes personalizar los campos según tu modelo de datos
+  const cliente = body.cliente || {};
+  const items = body.items || [];
+  const forma_de_pago = body.forma_de_pago || "Pendiente";
+  const direccion = cliente.direccion || "";
+  const observaciones = cliente.observaciones || "";
+  const total = items.reduce((sum, item) => sum + Number(item.precio || 0) * Number(item.cantidad || 0), 0);
+
+  // Payload para la colección de ventas ("datos")
+  const salePayload = {
+    cliente,
+    items,
+    forma_de_pago,
+    direccion,
+    observaciones,
+    total,
+    created_at: new Date().toISOString(),
+    estado: "Pendiente",
+  };
+
+  // Payload para la colección de pedidos_web
+  const orderPayload = {
+    cliente,
+    lineas: items,
+    forma_de_pago,
+    direccion,
+    observaciones,
+    total,
+    created_at: new Date().toISOString(),
+    estado: "Pendiente",
+  };
+
+  return { salePayload, orderPayload };
+}
+
 // Importar middlewares y servicios personalizados
 const {
   attachSession,
