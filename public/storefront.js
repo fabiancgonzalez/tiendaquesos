@@ -369,6 +369,20 @@ async function loadProducts() {
 async function submitOrder(event) {
   event.preventDefault();
 
+  // Verificar sesión de usuario antes de continuar
+  let session = null;
+  try {
+    session = JSON.parse(localStorage.getItem("tiendaquesos_session") || "null");
+  } catch (_e) {
+    session = null;
+  }
+  if (!session) {
+    // Guardar intento de checkout para volver después del login
+    localStorage.setItem("tiendaquesos_checkout_redirect", "1");
+    window.location.href = "./login.html";
+    return;
+  }
+
   if (!cart.length) {
     setCartStatus("Agrega productos antes de enviar el pedido.");
     return;
@@ -421,6 +435,12 @@ document.addEventListener("DOMContentLoaded", () => {
   loadProducts();
   bindStorefrontMenu();
   checkoutForm?.addEventListener("submit", submitOrder);
+
+  // Si el usuario viene de login y quería hacer checkout, volver a abrir el carrito
+  if (localStorage.getItem("tiendaquesos_checkout_redirect")) {
+    openCartPanel();
+    localStorage.removeItem("tiendaquesos_checkout_redirect");
+  }
   cartMenuBtn?.addEventListener("click", () => {
     const isHidden = cartPanel?.classList.contains("hidden");
     if (isHidden) {

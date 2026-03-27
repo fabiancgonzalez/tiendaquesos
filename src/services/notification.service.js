@@ -39,6 +39,11 @@ async function generateInvoicePDF({ order, sale, customer }) {
     doc.on("data", buffers.push.bind(buffers));
     doc.on("end", () => {
       const pdfData = Buffer.concat(buffers);
+      if (!pdfData || !Buffer.isBuffer(pdfData) || pdfData.length === 0) {
+        console.error("[PDF] Error: El buffer PDF está vacío o no es válido");
+      } else {
+        console.log(`[PDF] PDF generado correctamente. Tamaño: ${pdfData.length} bytes`);
+      }
       resolve(pdfData);
     });
 
@@ -187,7 +192,7 @@ async function sendEmailIfPossible(transport, to, subject, text, pdfBuffer) {
       subject,
       text,
     };
-    if (pdfBuffer) {
+    if (pdfBuffer && Buffer.isBuffer(pdfBuffer) && pdfBuffer.length > 0) {
       mailOptions.attachments = [
         {
           filename: "factura.pdf",
@@ -195,10 +200,14 @@ async function sendEmailIfPossible(transport, to, subject, text, pdfBuffer) {
           contentType: "application/pdf",
         },
       ];
+      console.log(`[EMAIL] Adjuntando PDF de ${pdfBuffer.length} bytes a ${to}`);
+    } else if (pdfBuffer) {
+      console.error(`[EMAIL] El buffer PDF es inválido o vacío, no se adjunta. Tamaño: ${pdfBuffer.length || 0}`);
     }
     await transport.sendMail(mailOptions);
     return { requested: true, sent: true, to, error: null };
   } catch (error) {
+    console.error(`[EMAIL] Error enviando correo a ${to}:`, error);
     return { requested: true, sent: false, to, error: error.message };
   }
 }
@@ -217,7 +226,12 @@ async function notifyOrderCreated({ order, sale, customer }) {
   let pdfBuffer = null;
   try {
     pdfBuffer = await generateInvoicePDF({ order, sale, customer });
+    if (!pdfBuffer || !Buffer.isBuffer(pdfBuffer) || pdfBuffer.length === 0) {
+      console.error("[PDF] El PDF generado es nulo o vacío, no se adjuntará");
+      pdfBuffer = null;
+    }
   } catch (e) {
+    console.error("[PDF] Error generando PDF:", e);
     pdfBuffer = null;
   }
 
@@ -227,21 +241,29 @@ async function notifyOrderCreated({ order, sale, customer }) {
 
   // WhatsApp: enviar PDF como documento si es posible
   let buyerWhatsAppResult, adminWhatsAppResult;
-  if (MessageMedia && pdfBuffer) {
+  if (MessageMedia && pdfBuffer && Buffer.isBuffer(pdfBuffer) && pdfBuffer.length > 0) {
     try {
+      const base64pdf = pdfBuffer.toString("base64");
+      if (!base64pdf || base64pdf.length < 100) {
+        console.error("[WA] El PDF convertido a base64 es inválido o muy pequeño");
+        throw new Error("PDF base64 inválido");
+      }
       const media = new MessageMedia(
         "application/pdf",
-        pdfBuffer.toString("base64"),
+        base64pdf,
         "factura.pdf"
       );
+      console.log(`[WA] Enviando PDF por WhatsApp (${base64pdf.length} chars) a comprador y admin`);
       buyerWhatsAppResult = await sendWhatsAppMessage(buyerPhone, media, { caption: text, sendMediaAsDocument: true });
       adminWhatsAppResult = await sendWhatsAppMessage(adminPhone, media, { caption: text, sendMediaAsDocument: true });
     } catch (e) {
-      // Si falla, enviar solo texto
+      console.error("[WA] Error enviando PDF por WhatsApp, se enviará solo texto:", e);
       buyerWhatsAppResult = await sendWhatsAppMessage(buyerPhone, text);
       adminWhatsAppResult = await sendWhatsAppMessage(adminPhone, text);
     }
   } else {
+    if (!MessageMedia) console.error("[WA] MessageMedia no está disponible, no se puede enviar PDF");
+    if (!pdfBuffer) console.error("[WA] El buffer PDF es nulo, no se puede enviar PDF");
     buyerWhatsAppResult = await sendWhatsAppMessage(buyerPhone, text);
     adminWhatsAppResult = await sendWhatsAppMessage(adminPhone, text);
   }

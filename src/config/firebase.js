@@ -9,6 +9,8 @@ function normalizePrivateKey(value) {
   return String(value).replace(/\\n/g, "\n");
 }
 
+
+
 function buildServiceAccountFromDiscreteEnv() {
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const privateKey = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
@@ -80,11 +82,13 @@ function initializeFirebase() {
 
   const serviceAccount = getServiceAccountFromEnv();
 
+
   if (serviceAccount) {
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
   }
+
 
   return admin.initializeApp({
     credential: admin.credential.applicationDefault(),

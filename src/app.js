@@ -1,3 +1,28 @@
+// --- Helpers de permisos y colecciones ---
+function sanitizeCollectionList(collections) {
+  // Filtra colecciones ocultas o internas si es necesario
+  return (collections || []).filter(
+    (name) => !name.startsWith("_") && name !== "migrations"
+  );
+}
+
+function canAccessCollection(session, collection, method = "GET") {
+  // Permite acceso total a admin, restringe a otros roles
+  if (!session?.user) return false;
+  if (session.user.rol === "admin") return true;
+  // Ejemplo: solo permite acceso a "articulos" y "clientes" a otros roles
+  const allowed = ["articulos", "clientes", "proveedores", "pedidos_web", "datos"];
+  return allowed.includes(collection);
+}
+
+function requireCollectionPermission(req, res, next) {
+  const collection = req.params.collection;
+  if (!canAccessCollection(req.session, collection, req.method)) {
+    return res.status(403).json({ message: "Acceso denegado a la colección" });
+  }
+  next();
+}
+
 const path = require("path");
 const fs = require("fs");
 const express = require("express");
@@ -5,62 +30,37 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const multer = require("multer");
 
-const { readWorkbook } = require("./services/excel.service");
-const { importSheetsToFirestore } = require("./services/firestore-import.service");
-const {
-  listCollections,
-  listItems,
-  createItem,
-  updateItem,
-  deleteItem,
-} = require("./services/firestore-crud.service");
+// Importar middlewares y servicios personalizados
 const {
   attachSession,
   authenticateUser,
   clearSessionCookie,
   createSessionForUser,
   destroySessionFromRequest,
-  ensureDefaultAdminUser,
   requireAuth,
   requireRole,
   setSessionCookie,
 } = require("./services/auth.service");
+const {
+  listCollections,
+  listItems,
+  createItem,
+  updateItem,
+  deleteItem,
+  sanitizeUserItem,
+} = require("./services/firestore-crud.service");
 const { notifyOrderCreated } = require("./services/notification.service");
-const { getWhatsAppState, initializeWhatsAppWeb } = require("./services/whatsappweb.service");
+const { readWorkbook } = require("./services/excel.service");
+const { importSheetsToFirestore, normalizeCollectionName } = require("./services/firestore-import.service");
+const { getWhatsAppState } = require("./services/whatsappweb.service");
 
 dotenv.config();
 
+const upload = multer({ dest: path.resolve(process.cwd(), "uploads/products") });
+
 const app = express();
-const isVercelRuntime = Boolean(process.env.VERCEL);
-const uploadsDir = isVercelRuntime
-  ? path.join("/tmp", "uploads", "products")
-  : path.resolve(process.cwd(), "uploads", "products");
 
-try {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-} catch (_e) {
-  // read-only filesystem in serverless environment
-}
-
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, uploadsDir),
-    filename: (_req, file, cb) => {
-      const safeBaseName = path
-        .basename(file.originalname, path.extname(file.originalname))
-        .replace(/[^a-z0-9_-]+/gi, "-")
-        .replace(/^-+|-+$/g, "")
-        .toLowerCase();
-      const uniqueName = `${Date.now()}-${safeBaseName || "producto"}${path.extname(file.originalname || ".jpg")}`;
-      cb(null, uniqueName);
-    },
-  }),
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
-
-const HIDDEN_COLLECTIONS = new Set(["_auth_sessions"]);
-const SELLER_WRITE_COLLECTIONS = new Set(["articulos", "categorias", "clientes", "datos"]);
-
+// Middlewares
 app.use(cors());
 app.use(attachSession);
 app.use(express.json());
@@ -68,120 +68,50 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.resolve(process.cwd(), "public")));
 app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
-if (!isVercelRuntime) {
-  ensureDefaultAdminUser().catch((error) => {
-    console.error("No se pudo asegurar el usuario admin por defecto:", error.message);
-  });
-
-  initializeWhatsAppWeb().catch((error) => {
-    console.error("No se pudo inicializar whatsappweb:", error.message);
-  });
-}
-
-function resolveExcelPath(customPath) {
-  const defaultPath = process.env.EXCEL_FILE_PATH || "./Fabian Gonzalez FACTURASV3.xlsx";
-  const rawPath = customPath || defaultPath;
-
-  return path.isAbsolute(rawPath) ? rawPath : path.resolve(process.cwd(), rawPath);
-}
-
-function sanitizeCollectionList(collections) {
-  return collections.filter((collection) => !HIDDEN_COLLECTIONS.has(collection));
-}
-
-function canAccessCollection(session, collectionName, method) {
-  const collection = String(collectionName || "").trim().toLowerCase();
-
-  if (!session?.user) {
-    return false;
+// Endpoints
+app.post("/api/auth/register", async (req, res) => {
+  const { nombre, email, telefono, password } = req.body || {};
+  if (!nombre || !email || !telefono || !password) {
+    return res.status(400).json({ error: "Faltan datos obligatorios" });
   }
+  try {
+    // Verificar si ya existe el usuario en Firebase Auth
+    let userRecord;
+    try {
+      userRecord = await require("../src/config/firebase").admin.auth().getUserByEmail(email);
+      return res.status(409).json({ error: "El email ya está registrado" });
+    } catch (e) {
+      // Si no existe, Firebase lanza error, seguimos
+    }
 
-  if (session.user.rol === "admin") {
-    return !HIDDEN_COLLECTIONS.has(collection);
-  }
-
-  if (collection === "usuarios" || HIDDEN_COLLECTIONS.has(collection)) {
-    return false;
-  }
-
-  if (method === "GET") {
-    return true;
-  }
-
-  return SELLER_WRITE_COLLECTIONS.has(collection);
-}
-
-function requireCollectionPermission(req, res, next) {
-  if (!canAccessCollection(req.session, req.params.collection, req.method)) {
-    return res.status(req.session?.user ? 403 : 401).json({
-      message: req.session?.user ? "Acceso denegado" : "No autenticado",
-      error: req.session?.user ? "No tienes permisos para esta colección" : "Inicia sesión para continuar",
+    // Crear usuario en Firebase Auth
+    const newUser = await require("../src/config/firebase").admin.auth().createUser({
+      email,
+      password,
+      displayName: nombre,
+      phoneNumber: telefono.startsWith("+") ? telefono : "+" + telefono.replace(/\D+/g, ""),
+      disabled: false,
     });
+
+    // Guardar datos extra en Firestore
+    const db = require("../src/config/firebase").db;
+    await db.collection("usuarios").doc(newUser.uid).set({
+      nombre,
+      email,
+      telefono,
+      rol: "cliente",
+      creado: new Date().toISOString(),
+      uid: newUser.uid,
+    });
+
+    return res.json({ ok: true, uid: newUser.uid });
+  } catch (error) {
+    let msg = error.message || "Error registrando usuario";
+    if (error.code === "auth/email-already-exists") {
+      msg = "El email ya está registrado";
+    }
+    return res.status(500).json({ error: msg });
   }
-
-  return next();
-}
-
-function buildStoreOrderPayload(payload) {
-  const customer = payload?.cliente || {};
-  const items = Array.isArray(payload?.items) ? payload.items : [];
-  const lineas = items
-    .map((item) => ({
-      articulo_id: item.id,
-      concepto: item.nombre,
-      cantidad: Number(item.cantidad || 0),
-      precio: Number(item.precio || 0),
-      impuesto: Number(item.impuesto || 0),
-      total_linea: Number((Number(item.cantidad || 0) * Number(item.precio || 0)).toFixed(2)),
-    }))
-    .filter((item) => item.articulo_id && item.cantidad > 0);
-
-  if (!customer.nombre || !customer.telefono || !customer.email || !lineas.length) {
-    throw new Error("Debes completar cliente, teléfono, email y al menos un producto");
-  }
-
-  const subtotal = Number(lineas.reduce((sum, line) => sum + Number(line.total_linea || 0), 0).toFixed(2));
-  const kilosTotales = Number(lineas.reduce((sum, line) => sum + Number(line.cantidad || 0), 0).toFixed(2));
-
-  return {
-    salePayload: {
-      vendedor: "Tienda Web",
-      cliente: customer.nombre,
-      cliente_email: customer.email || "",
-      cliente_telefono: customer.telefono,
-      direccion_entrega: customer.direccion || "",
-      observaciones: customer.observaciones || "Pedido generado desde la tienda web",
-      n_factura: `WEB-${Date.now()}`,
-      fecha: new Date().toISOString().slice(0, 10),
-      subtotal,
-      total: subtotal,
-      forma_de_pago: payload.forma_de_pago || "Pendiente",
-      canal: "tienda_web",
-      lineas,
-      lineas_count: lineas.length,
-      kilos_totales: kilosTotales,
-    },
-    orderPayload: {
-      cliente: {
-        nombre: customer.nombre,
-        email: customer.email || "",
-        telefono: customer.telefono || "",
-        direccion: customer.direccion || "",
-      },
-      forma_de_pago: payload.forma_de_pago || "Pendiente",
-      observaciones: customer.observaciones || "",
-      estado: "pendiente",
-      subtotal,
-      total: subtotal,
-      canal: "tienda_web",
-      lineas,
-      lineas_count: lineas.length,
-    },
-  };
-}
-
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
 });
 
 app.post("/api/auth/login", async (req, res) => {

@@ -3,38 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
+    <title>Registro de Usuario</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="container auth-page">
       <div class="card auth-card">
-        <span class="pill">Acceso al sistema</span>
-        <h1>Ingresar</h1>
-        <p class="small">Administradores y vendedores ingresan desde aquí.</p>
-        <form id="loginForm" class="stack">
+        <span class="pill">Registro</span>
+        <h1>Crear cuenta</h1>
+        <form id="registerForm" class="stack">
+          <div class="field">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" required />
+          </div>
           <div class="field">
             <label for="email">Email</label>
             <input id="email" type="email" required />
           </div>
           <div class="field">
+            <label for="telefono">Teléfono</label>
+            <input id="telefono" type="tel" required />
+          </div>
+          <div class="field">
             <label for="password">Contraseña</label>
             <input id="password" type="password" required />
           </div>
-          <button type="submit">Entrar</button>
-
-          <div class="field full">
-            <a href="./register.html" class="ghost-link">¿No tienes cuenta? Regístrate aquí</a>
-          </div>
+          <button type="submit">Registrarse</button>
         </form>
         <p id="status" class="small"></p>
-        <p class="small">         Tiendas Fernandez         </p>
+        <a class="ghost-link" href="./login.html">¿Ya tienes cuenta? Inicia sesión</a>
         <a class="ghost-link" href="./index.html">Volver a la tienda</a>
       </div>
     </div>
     <script src="./theme.js"></script>
-    <script src="./auth.js"></script>
-    <script src="./login.js"></script>
-     <script src="./register.js"></script>
+    <script src="./register.js"></script>
   </body>
 </html>
