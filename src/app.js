@@ -56,7 +56,16 @@ const { getWhatsAppState } = require("./services/whatsappweb.service");
 
 dotenv.config();
 
-const upload = multer({ dest: path.resolve(process.cwd(), "uploads/products") });
+
+// Usar /tmp para compatibilidad con Vercel/serverless
+const fs = require("fs");
+const uploadDir = "/tmp/uploads/products";
+try {
+  fs.mkdirSync(uploadDir, { recursive: true });
+} catch (e) {
+  // Ignorar si ya existe o no se puede crear
+}
+const upload = multer({ dest: uploadDir });
 
 const app = express();
 
