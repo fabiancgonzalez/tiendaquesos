@@ -38,7 +38,13 @@ async function login(event) {
       rol: user.rol,
     });
 
-    window.location.href = user.rol === "admin" ? "./panel-admin.html" : "./seller.html";
+   if (user.rol === "admin") {
+  window.location.href = "./panel-admin.html";
+} else if (user.rol === "seller") {
+  window.location.href = "./seller.html";
+} else {
+  window.location.href = "./index.html"; // usuario común u otro rol
+}
   } catch (error) {
     setStatus(error.message);
   }
