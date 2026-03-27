@@ -58,7 +58,7 @@ dotenv.config();
 
 
 // Usar /tmp para compatibilidad con Vercel/serverless
-const fs = require("fs");
+
 const uploadDir = "/tmp/uploads/products";
 try {
   fs.mkdirSync(uploadDir, { recursive: true });
