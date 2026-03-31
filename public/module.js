@@ -371,6 +371,12 @@ function parseValue(field, rawValue) {
 }
 
 function stringifyCellValue(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    if (typeof value.nombre === "string" && value.nombre.trim()) {
+      return value.nombre;
+    }
+  }
+
   if (Array.isArray(value) || (value && typeof value === "object")) {
     return JSON.stringify(value, null, 2);
   }
@@ -432,7 +438,7 @@ function buildFinanceMovements(financeItems, salesItems, purchaseItems) {
       origen: "Ventas",
       documento: item.n_factura || item.id || "-",
       tipo_movimiento: "Cobro cliente",
-      tercero: item.cliente || "Sin cliente",
+      tercero: typeof item.cliente === "object" ? item.cliente?.nombre || item.cliente_detalle?.nombre || "Sin cliente" : item.cliente || item.cliente_detalle?.nombre || "Sin cliente",
       concepto: item.n_factura || item.observaciones || "Venta",
       monto: Number(item.total || item.subtotal || 0),
       medio_pago: item.forma_de_pago || "-",

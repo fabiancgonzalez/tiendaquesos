@@ -1,8 +1,12 @@
+function normalizePhone(value) {
+  return String(value || '').replace(/\D+/g, '');
+}
+
 document.getElementById('registerForm').addEventListener('submit', async function (e) {
   e.preventDefault();
   const nombre = document.getElementById('nombre').value.trim();
   const email = document.getElementById('email').value.trim();
-  const telefono = document.getElementById('telefono').value.trim();
+  const telefono = normalizePhone(document.getElementById('telefono').value.trim());
   const password = document.getElementById('password').value;
   const status = document.getElementById('status');
   status.textContent = '';
@@ -29,6 +33,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
               nombre: loginData.user.nombre || loginData.user.email,
               email: loginData.user.email,
               rol: loginData.user.rol,
+              telefono: normalizePhone(loginData.user.telefono || telefono),
             });
           }
         }

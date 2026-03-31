@@ -5,6 +5,10 @@ function setStatus(message) {
   statusEl.textContent = message;
 }
 
+function normalizePhone(value) {
+  return String(value || "").replace(/\D+/g, "");
+}
+
 async function login(event) {
   event.preventDefault();
 
@@ -36,7 +40,7 @@ async function login(event) {
       nombre: user.nombre || user.email,
       email: user.email,
       rol: user.rol,
-      telefono: user.telefono || "", 
+      telefono: normalizePhone(user.telefono || ""),
     });
 
    if (user.rol === "admin") {

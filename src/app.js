@@ -207,7 +207,7 @@ app.post("/api/auth/register", async (req, res) => {
     await db.collection("usuarios").doc(newUser.uid).set({
       nombre,
       email,
-      telefono,
+      telefono: String(telefono || "").replace(/\D+/g, ""),
       rol: "cliente",
       creado: new Date().toISOString(),
       uid: newUser.uid,

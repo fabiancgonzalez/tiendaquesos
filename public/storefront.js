@@ -114,6 +114,10 @@ function formatMoney(value) {
   return Number.isFinite(amount) ? amount.toFixed(2) : "0.00";
 }
 
+function normalizePhone(value) {
+  return String(value || "").replace(/\D+/g, "");
+}
+
 function normalizeQuantity(value) {
   const amount = Number(value);
   return Number.isFinite(amount) && amount > 0 ? Number(amount.toFixed(2)) : 1;
@@ -248,8 +252,10 @@ function openLink(url) {
 function triggerOrderNotifications(notification) {
   const whatsappBuyer = notification?.whatsapp?.buyer?.url;
   const whatsappAdmin = notification?.whatsapp?.admin?.url;
+  const whatsappSeller = notification?.whatsapp?.seller?.url;
   const emailBuyer = notification?.email?.buyer;
   const emailAdmin = notification?.email?.admin;
+  const emailSeller = notification?.email?.seller;
 
   if (!notification?.whatsapp?.buyer?.sent && whatsappBuyer) {
     openLink(whatsappBuyer);
@@ -259,15 +265,20 @@ function triggerOrderNotifications(notification) {
     openLink(whatsappAdmin);
   }
 
-  const emailWasSent = Boolean(emailBuyer?.sent) && Boolean(emailAdmin?.sent);
+  if (!notification?.whatsapp?.seller?.sent && whatsappSeller) {
+    openLink(whatsappSeller);
+  }
+
+  const emailWasSent = Boolean(emailBuyer?.sent) && Boolean(emailAdmin?.sent) && Boolean(emailSeller?.sent || !emailSeller?.requested);
 
   if (!emailWasSent) {
     openLink(emailBuyer?.mailto);
     openLink(emailAdmin?.mailto);
+    openLink(emailSeller?.mailto);
   }
 
-  if (emailWasSent && notification?.whatsapp?.buyer?.sent && notification?.whatsapp?.admin?.sent) {
-    setCheckoutStatus("Avisos enviados por WhatsApp y correo al comprador y administrador.");
+  if (emailWasSent && notification?.whatsapp?.buyer?.sent && notification?.whatsapp?.admin?.sent && (notification?.whatsapp?.seller?.sent || !notification?.whatsapp?.seller?.requested)) {
+    setCheckoutStatus("Avisos enviados por WhatsApp y correo a cliente, administrador y vendedor.");
   } else if (emailWasSent) {
     setCheckoutStatus("Correo enviado. WhatsApp se abrió en navegador si no estaba conectado whatsappweb.");
   } else if (notification?.email?.smtpConfigured) {
@@ -372,7 +383,7 @@ async function submitOrder(event) {
   // Verificar sesión de usuario antes de continuar
   let session = null;
   try {
-    session = JSON.parse(localStorage.getItem("tiendaquesos_session") || "null");
+    session = window.TiendaAuth ? await window.TiendaAuth.refreshSession() : JSON.parse(localStorage.getItem("tiendaquesos_session") || "null");
   } catch (_e) {
     session = null;
   }
@@ -396,14 +407,14 @@ async function submitOrder(event) {
   const cliente = {
     nombre: session?.nombre || session?.user?.nombre || String(formData.get("nombre") || "").trim(),
     email: session?.email || session?.user?.email || String(formData.get("email") || "").trim(),
-    telefono: session?.telefono || session?.user?.telefono || String(formData.get("telefono") || "").trim(),
+    telefono: normalizePhone(session?.telefono || session?.user?.telefono || String(formData.get("telefono") || "").trim()),
     direccion: String(formData.get("direccion") || "").trim(),
     observaciones: String(formData.get("observaciones") || "").trim(),
-    vendedor: String(formData.get("vendedor") || "").trim() || (session?.rol === "seller" || session?.rol === "admin" ? (session?.nombre || session?.user?.nombre || session?.email || session?.user?.email) : (session?.email || session?.user?.email || "tiendaweb")),
+    vendedor: String(formData.get("vendedor") || "").trim() || (session?.rol === "vendedor" || session?.rol === "admin" ? (session?.nombre || session?.user?.nombre || session?.email || session?.user?.email) : (session?.email || session?.user?.email || "tiendaweb")),
   };
   const payload = {
     cliente,
-    vendedor: cliente.vendedor, // redundante para asegurar que llegue
+    vendedor: cliente.vendedor,
     forma_de_pago: String(formData.get("forma_de_pago") || "Pendiente"),
     items: cartCopy,
   };
