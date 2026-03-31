@@ -372,26 +372,28 @@ async function createItem(rawCollectionName, payload, options = {}) {
   // Si es una venta, crear inventario y notificar
   if (collectionName === SALES_COLLECTION) {
     const createdInventoryItem = await createInventoryDocument(collectionName, data);
-    // Notificar con PDF y datos de cliente si existen
-    try {
-      // Buscar datos de cliente para la venta
-      let customer = null;
-      if (data.cliente && typeof data.cliente === "object") {
-        customer = data.cliente;
-      } else if (data.cliente && typeof data.cliente === "string") {
-        customer = { nombre: data.cliente };
-      }
+    if (!options.skipNotification) {
+      try {
+        const customer =
+        data.cliente_detalle && typeof data.cliente_detalle === "object"
+          ? data.cliente_detalle
+          : data.cliente && typeof data.cliente === "object"
+            ? data.cliente
+            : data.cliente && typeof data.cliente === "string"
+              ? { nombre: data.cliente }
+              : null;
       // Si hay email o teléfono, notificar
-      if (customer && (customer.email || customer.telefono)) {
-        await notifyOrderCreated({
-          order: { ...createdInventoryItem, lineas: createdInventoryItem.lineas || data.lineas || [] },
-          sale: createdInventoryItem,
-          customer,
-        });
-      }
-    } catch (e) {
+        if (customer && (customer.email || customer.telefono)) {
+          await notifyOrderCreated({
+            order: { ...createdInventoryItem, lineas: createdInventoryItem.lineas || data.lineas || [] },
+            sale: createdInventoryItem,
+            customer,
+          });
+        }
+      } catch (e) {
       // No bloquear la venta si falla la notificación
       console.error("Error enviando notificación de venta:", e.message);
+    }
     }
     return {
       collection: collectionName,

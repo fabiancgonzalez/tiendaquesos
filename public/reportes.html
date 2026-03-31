@@ -90,6 +90,19 @@
       <div class="card stack">
         <div class="row" style="justify-content: space-between; align-items: flex-end;">
           <div>
+            <h3>Pedidos PDF por fecha</h3>
+            <span class="small">Descarga los comprobantes generados por día</span>
+          </div>
+          <div class="field">
+            <label for="pdfDateInput">Fecha</label>
+            <input id="pdfDateInput" type="date" />
+            <button id="buscarPDFBtn" type="button">Buscar PDFs</button>
+          </div>
+        </div>
+        <ul id="pdfList" class="pdf-list"></ul>
+      </div>
+        <div class="row" style="justify-content: space-between; align-items: flex-end;">
+          <div>
             <h3>Ventas por vendedor</h3>
             <span class="small">KG vendidos, tipos de queso y clientes atendidos</span>
           </div>

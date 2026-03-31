@@ -389,16 +389,23 @@ async function submitOrder(event) {
   }
 
   const formData = new FormData(checkoutForm);
+  // Hacer copia del carrito antes de vaciarlo
+  const cartCopy = Array.isArray(cart) ? cart.map(item => ({ ...item })) : [];
+  // Construir datos de cliente y vendedor correctamente
+  // Construir el objeto cliente exactamente con los campos del formulario
+  const cliente = {
+    nombre: session?.nombre || session?.user?.nombre || String(formData.get("nombre") || "").trim(),
+    email: session?.email || session?.user?.email || String(formData.get("email") || "").trim(),
+    telefono: session?.telefono || session?.user?.telefono || String(formData.get("telefono") || "").trim(),
+    direccion: String(formData.get("direccion") || "").trim(),
+    observaciones: String(formData.get("observaciones") || "").trim(),
+    vendedor: String(formData.get("vendedor") || "").trim() || (session?.rol === "seller" || session?.rol === "admin" ? (session?.nombre || session?.user?.nombre || session?.email || session?.user?.email) : (session?.email || session?.user?.email || "tiendaweb")),
+  };
   const payload = {
-    cliente: {
-      nombre: String(formData.get("nombre") || "").trim(),
-      email: String(formData.get("email") || "").trim(),
-      telefono: String(formData.get("telefono") || "").trim(),
-      direccion: String(formData.get("direccion") || "").trim(),
-      observaciones: String(formData.get("observaciones") || "").trim(),
-    },
+    cliente,
+    vendedor: cliente.vendedor, // redundante para asegurar que llegue
     forma_de_pago: String(formData.get("forma_de_pago") || "Pendiente"),
-    items: cart,
+    items: cartCopy,
   };
 
   try {
@@ -415,39 +422,44 @@ async function submitOrder(event) {
       throw new Error(data.error || "No se pudo enviar el pedido");
     }
 
+    // Vaciar carrito solo después de que el pedido fue enviado correctamente
     cart = [];
     saveCart();
+    try { localStorage.removeItem("tiendaquesos_cart"); } catch (_e) {}
     renderCart();
     checkoutForm.reset();
     closeCartPanel();
     setCartStatus(`Pedido generado: ${data.order.id}`);
     triggerOrderNotifications(data.notification || {});
     await loadProducts();
+    // Redirigir al index después de confirmar
+    setTimeout(() => {
+      window.location.href = "./index.html";
+    }, 1200);
   } catch (error) {
-    setCartStatus(error.message);
-    setCheckoutStatus("");
+    setCartStatus(error.message || "Error al enviar el pedido");
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  renderCart();
-  updateCartMenuCount();
-  loadProducts();
-  bindStorefrontMenu();
-  checkoutForm?.addEventListener("submit", submitOrder);
-
-  // Si el usuario viene de login y quería hacer checkout, volver a abrir el carrito
-  if (localStorage.getItem("tiendaquesos_checkout_redirect")) {
+// Si el usuario viene de login y quería hacer checkout, volver a abrir el carrito
+if (localStorage.getItem("tiendaquesos_checkout_redirect")) {
+  openCartPanel();
+  localStorage.removeItem("tiendaquesos_checkout_redirect");
+}
+cartMenuBtn?.addEventListener("click", () => {
+  const isHidden = cartPanel?.classList.contains("hidden");
+  if (isHidden) {
     openCartPanel();
-    localStorage.removeItem("tiendaquesos_checkout_redirect");
+  } else {
+    closeCartPanel();
   }
-  cartMenuBtn?.addEventListener("click", () => {
-    const isHidden = cartPanel?.classList.contains("hidden");
-    if (isHidden) {
-      openCartPanel();
-    } else {
-      closeCartPanel();
-    }
-  });
-  closeCartBtn?.addEventListener("click", closeCartPanel);
+});
+closeCartBtn?.addEventListener("click", closeCartPanel);
+if (checkoutForm) {
+  checkoutForm.addEventListener("submit", submitOrder);
+}
+
+// Cargar productos al iniciar la página
+document.addEventListener("DOMContentLoaded", () => {
+  loadProducts();
 });

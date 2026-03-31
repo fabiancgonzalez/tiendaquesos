@@ -29,6 +29,7 @@
     if (role === "seller") {
       return session.rol === "vendedor" || session.rol === "admin";
     }
+    
 
     return session.rol === role;
   }
@@ -90,6 +91,11 @@
         } catch (_error) {
           // noop
         }
+
+        // Limpiar carrito al cerrar sesión
+        try {
+          localStorage.removeItem("tiendaquesos_cart");
+        } catch (_e) {}
 
         clearSession();
         window.location.href = "./login.html";

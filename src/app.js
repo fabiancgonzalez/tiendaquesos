@@ -1,10 +1,14 @@
-// --- Helpers de permisos y colecciones ---
-function sanitizeCollectionList(collections) {
-  // Filtra colecciones ocultas o internas si es necesario
-  return (collections || []).filter(
-    (name) => !name.startsWith("_") && name !== "migrations"
-  );
-}
+
+const path = require("path");
+const fs = require("fs");
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const multer = require("multer");
+const app = express();
+
+
+
 
 function canAccessCollection(session, collection, method = "GET") {
   // Permite acceso total a admin, restringe a otros roles
@@ -23,49 +27,106 @@ function requireCollectionPermission(req, res, next) {
   next();
 }
 
-const path = require("path");
-const fs = require("fs");
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const multer = require("multer");
+function formatPhoneArgentina(telefono) {
+  const digits = String(telefono || "").replace(/\D+/g, "");
+  if (digits.startsWith("549")) return "+" + digits;
+  if (digits.startsWith("54"))  return "+549" + digits.slice(2);
+  if (digits.startsWith("0"))   return "+549" + digits.slice(1);
+  return "+549" + digits;
+}
+
+function normalizeCustomer(body = {}) {
+  const rawCustomer = body.cliente && typeof body.cliente === "object" ? body.cliente : {};
+  const nombre = String(rawCustomer.nombre || body.nombre || "").trim();
+  const email = String(rawCustomer.email || body.email || "").trim().toLowerCase();
+  const telefono = String(rawCustomer.telefono || body.telefono || "").replace(/\D+/g, "");
+  const direccion = String(rawCustomer.direccion || body.direccion || "").trim();
+  const observaciones = String(rawCustomer.observaciones || body.observaciones || "").trim();
+  const vendedor = String(body.vendedor || rawCustomer.vendedor || "Tienda Web").trim();
+
+  return {
+    nombre,
+    email,
+    telefono,
+    telefono_whatsapp: telefono,
+    telefono_formateado: telefono ? formatPhoneArgentina(telefono) : "",
+    direccion,
+    observaciones,
+    vendedor,
+  };
+}
+
+function normalizeStoreLineItems(items = []) {
+  return Array.isArray(items)
+    ? items
+        .map((item) => {
+          const cantidad = Number(item.cantidad || 0);
+          const precio = Number(item.precio || 0);
+          const impuesto = Number(item.impuesto || 0);
+
+          return {
+            articulo_id: String(item.id || item.articulo_id || "").trim(),
+            concepto: String(item.nombre || item.concepto || item.articulo_id || "Producto").trim(),
+            cantidad,
+            precio,
+            impuesto,
+            total_linea: Number((cantidad * precio).toFixed(2)),
+            imagen: String(item.imagen || "").trim(),
+          };
+        })
+        .filter((item) => item.cantidad > 0)
+    : [];
+}
 
 // --- Utilidad para construir el payload del pedido desde el body ---
 function buildStoreOrderPayload(body = {}) {
   // Estructura mínima para que funcione el endpoint
   // Puedes personalizar los campos según tu modelo de datos
-  const cliente = body.cliente || {};
-  const items = body.items || [];
+  const cliente = normalizeCustomer(body);
+  const items = normalizeStoreLineItems(body.items || []);
   const forma_de_pago = body.forma_de_pago || "Pendiente";
   const direccion = cliente.direccion || "";
+  const telefono = cliente.telefono || "";
   const observaciones = cliente.observaciones || "";
-  const total = items.reduce((sum, item) => sum + Number(item.precio || 0) * Number(item.cantidad || 0), 0);
+  const vendedor = cliente.vendedor || "Tienda Web";
+
+  const total = items.reduce((sum, item) => sum + Number(item.total_linea || 0), 0);
 
   // Payload para la colección de ventas ("datos")
   const salePayload = {
-    cliente,
+    cliente: cliente.nombre || "",
+    cliente_detalle: cliente,
     items,
+    lineas: items,
     forma_de_pago,
     direccion,
+    telefono,
+    email: cliente.email,
     observaciones,
     total,
+    vendedor,
+    fecha: new Date().toISOString().slice(0, 10),
     created_at: new Date().toISOString(),
     estado: "Pendiente",
   };
 
   // Payload para la colección de pedidos_web
   const orderPayload = {
-    cliente,
+    cliente: cliente.nombre || "",
+    cliente_detalle: cliente,
     lineas: items,
     forma_de_pago,
     direccion,
     observaciones,
     total,
+    telefono,
+    email: cliente.email,
+    vendedor,
     created_at: new Date().toISOString(),
     estado: "Pendiente",
   };
 
-  return { salePayload, orderPayload };
+  return { salePayload, orderPayload, customer: cliente };
 }
 
 // Importar middlewares y servicios personalizados
@@ -105,7 +166,7 @@ try {
 }
 const upload = multer({ dest: uploadDir });
 
-const app = express();
+
 
 // Middlewares
 app.use(cors());
@@ -136,7 +197,8 @@ app.post("/api/auth/register", async (req, res) => {
       email,
       password,
       displayName: nombre,
-      phoneNumber: telefono.startsWith("+") ? telefono : "+" + telefono.replace(/\D+/g, ""),
+      //phoneNumber: telefono.startsWith("+") ? telefono : "+" + telefono.replace(/\D+/g, ""),
+      phoneNumber: formatPhoneArgentina(telefono),
       disabled: false,
     });
 
@@ -200,9 +262,11 @@ app.get("/api/store/products", async (_req, res) => {
 
 app.post("/api/store/orders", async (req, res) => {
   try {
-    const { salePayload, orderPayload } = buildStoreOrderPayload(req.body || {});
+    const { salePayload, orderPayload, customer } = buildStoreOrderPayload(req.body || {});
+    // Siempre priorizar el teléfono del payload si existe
     const sale = await createItem("datos", salePayload, {
-      actor: { nombre: "Tienda Web", email: "web@tiendaquesos.local" },
+      actor: { nombre: "Tienda Web", email: "ceferinomonier@gmail.com" },
+      skipNotification: true,
     });
     const order = await createItem("pedidos_web", {
       ...orderPayload,
@@ -211,7 +275,7 @@ app.post("/api/store/orders", async (req, res) => {
     const notification = await notifyOrderCreated({
       order: order.item,
       sale: sale.item,
-      customer: orderPayload.cliente,
+      customer,
     });
 
     return res.status(201).json({
@@ -352,6 +416,40 @@ app.delete("/api/collections/:collection/items/:id", requireCollectionPermission
     });
   }
 });
+
+
+
+
+// --- Al final del archivo: Endpoint y static para PDFs de pedidos ---
+const pedidosPDFDir = require("path").resolve(process.cwd(), "pedidosPDF");
+app.get("/api/pedidosPDF", requireRole("admin"), (req, res) => {
+  const { fecha } = req.query;
+  try {
+    if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      return res.status(400).json({ error: "Fecha requerida en formato YYYY-MM-DD" });
+    }
+    if (!fs.existsSync(pedidosPDFDir)) {
+      return res.json({ pdfs: [] });
+    }
+    const files = fs.readdirSync(pedidosPDFDir)
+      .filter(f => f.startsWith(fecha + "_"))
+      .map(f => ({
+        name: f,
+        url: `/pedidosPDF/${encodeURIComponent(f)}`
+      }));
+    res.json({ pdfs: files });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.use("/pedidosPDF", express.static(pedidosPDFDir));
+// --- Helpers de permisos y colecciones ---
+function sanitizeCollectionList(collections) {
+  // Filtra colecciones ocultas o internas si es necesario
+  return (collections || []).filter(
+    (name) => !name.startsWith("_") && name !== "migrations"
+  );
+}
 
 app.get("/", (_req, res) => {
   res.sendFile(path.resolve(process.cwd(), "public", "index.html"));

@@ -1,3 +1,31 @@
+// PDF pedidos por fecha
+const pdfDateInput = document.getElementById("pdfDateInput");
+const buscarPDFBtn = document.getElementById("buscarPDFBtn");
+const pdfList = document.getElementById("pdfList");
+
+async function buscarPDFsPorFecha() {
+  if (!pdfDateInput || !pdfList) return;
+  const fecha = pdfDateInput.value;
+  pdfList.innerHTML = "<li>Cargando...</li>";
+  if (!fecha) {
+    pdfList.innerHTML = "<li>Selecciona una fecha</li>";
+    return;
+  }
+  try {
+    const res = await fetch(`/api/pedidosPDF?fecha=${fecha}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error consultando PDFs");
+    if (!data.pdfs || !data.pdfs.length) {
+      pdfList.innerHTML = `<li>No hay PDFs para la fecha ${fecha}</li>`;
+      return;
+    }
+    pdfList.innerHTML = data.pdfs.map(pdf => `<li><a href="${pdf.url}" target="_blank">${pdf.name}</a></li>`).join("");
+  } catch (e) {
+    pdfList.innerHTML = `<li>Error: ${e.message}</li>`;
+  }
+}
+
+if (buscarPDFBtn) buscarPDFBtn.addEventListener("click", buscarPDFsPorFecha);
 const statusEl = document.getElementById("status");
 const summaryBody = document.getElementById("summaryBody");
 const totalsContainer = document.getElementById("totalsContainer");

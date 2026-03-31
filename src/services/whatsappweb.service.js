@@ -143,7 +143,7 @@ async function initializeWhatsAppWeb() {
   return waState;
 }
 
-async function sendWhatsAppMessage(phone, text) {
+async function sendWhatsAppMessage(phone, content, options = {}) {
   if (!waState.enabled) {
     return { requested: false, sent: false, phone, error: "whatsappweb-deshabilitado" };
   }
@@ -169,7 +169,7 @@ async function sendWhatsAppMessage(phone, text) {
   try {
     const numberId = await waClient.getNumberId(chatId.replace("@c.us", ""));
     const targetId = numberId ? numberId._serialized : chatId;
-    await waClient.sendMessage(targetId, text);
+    await waClient.sendMessage(targetId, content, options);
     return { requested: true, sent: true, phone, error: null };
   } catch (error) {
     return { requested: true, sent: false, phone, error: error.message };

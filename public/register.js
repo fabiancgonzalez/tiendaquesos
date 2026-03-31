@@ -14,9 +14,28 @@ document.getElementById('registerForm').addEventListener('submit', async functio
       body: JSON.stringify({ nombre, email, telefono, password })
     });
     if (res.ok) {
+      // Login automático tras registro
+      try {
+        const loginRes = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        if (loginRes.ok) {
+          const loginData = await loginRes.json();
+          if (window.TiendaAuth && loginData.user) {
+            window.TiendaAuth.setSession({
+              id: loginData.user.id,
+              nombre: loginData.user.nombre || loginData.user.email,
+              email: loginData.user.email,
+              rol: loginData.user.rol,
+            });
+          }
+        }
+      } catch (_e) {}
       status.textContent = 'Registro exitoso. Redirigiendo...';
       setTimeout(() => {
-        window.location.href = './login.html';
+        window.location.href = './index.html';
       }, 1500);
     } else {
       const data = await res.json();

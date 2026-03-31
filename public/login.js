@@ -36,6 +36,7 @@ async function login(event) {
       nombre: user.nombre || user.email,
       email: user.email,
       rol: user.rol,
+      telefono: user.telefono || "", 
     });
 
    if (user.rol === "admin") {

@@ -55,17 +55,17 @@
         </div>
         <div id="cartItems" class="cart-items"></div>
         <p id="cartStatus" class="small"></p>
-        <h3>Finalizar pedido</h3>
+        <h3 id="checkoutTitle">Finalizar pedido</h3>
         <form id="checkoutForm" class="form-grid">
-          <div class="field">
+          <div class="field" id="checkoutNombreField">
             <label for="checkoutNombre">Nombre</label>
             <input id="checkoutNombre" name="nombre" type="text" required />
           </div>
-          <div class="field">
+          <div class="field" id="checkoutTelefonoField">
             <label for="checkoutTelefono">Teléfono</label>
             <input id="checkoutTelefono" name="telefono" type="text" required />
           </div>
-          <div class="field">
+          <div class="field" id="checkoutEmailField">
             <label for="checkoutEmail">Email</label>
             <input id="checkoutEmail" name="email" type="email" required />
           </div>
@@ -90,6 +90,29 @@
             <button type="submit">Confirmar pedido</button>
           </div>
         </form>
+        
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          var session = null;
+          try {
+            session = JSON.parse(localStorage.getItem('tiendaquesos_session') || 'null');
+          } catch (e) { session = null; }
+          if (session) {
+            var nombreField = document.getElementById('checkoutNombreField');
+            var telefonoField = document.getElementById('checkoutTelefonoField');
+            var emailField = document.getElementById('checkoutEmailField');
+            var nombreInput = document.getElementById('checkoutNombre');
+            var telefonoInput = document.getElementById('checkoutTelefono');
+            var emailInput = document.getElementById('checkoutEmail');
+            if (nombreField) nombreField.style.display = 'none';
+            if (telefonoField) telefonoField.style.display = 'none';
+            if (emailField) emailField.style.display = 'none';
+            if (nombreInput) { nombreInput.required = false; nombreInput.disabled = true; }
+            if (telefonoInput) { telefonoInput.required = false; telefonoInput.disabled = true; }
+            if (emailInput) { emailInput.required = false; emailInput.disabled = true; }
+          }
+        });
+        </script>
           <div class="field full">
             <a href="./register.html" class="ghost-link">¿No tienes cuenta? Regístrate aquí</a>
           </div>
