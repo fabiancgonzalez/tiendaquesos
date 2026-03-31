@@ -402,15 +402,16 @@ async function submitOrder(event) {
   const formData = new FormData(checkoutForm);
   // Hacer copia del carrito antes de vaciarlo
   const cartCopy = Array.isArray(cart) ? cart.map(item => ({ ...item })) : [];
-  // Construir datos de cliente y vendedor correctamente
-  // Construir el objeto cliente exactamente con los campos del formulario
+  // Tomar datos del cliente solo desde la sesión
   const cliente = {
-    nombre: session?.nombre || session?.user?.nombre || String(formData.get("nombre") || "").trim(),
-    email: session?.email || session?.user?.email || String(formData.get("email") || "").trim(),
-    telefono: normalizePhone(session?.telefono || session?.user?.telefono || String(formData.get("telefono") || "").trim()),
+    nombre: session?.nombre || session?.user?.nombre || "",
+    email: session?.email || session?.user?.email || "",
+    telefono: normalizePhone(session?.telefono || session?.user?.telefono || ""),
     direccion: String(formData.get("direccion") || "").trim(),
     observaciones: String(formData.get("observaciones") || "").trim(),
-    vendedor: String(formData.get("vendedor") || "").trim() || (session?.rol === "vendedor" || session?.rol === "admin" ? (session?.nombre || session?.user?.nombre || session?.email || session?.user?.email) : (session?.email || session?.user?.email || "tiendaweb")),
+    vendedor: (session?.rol === "vendedor" || session?.rol === "admin")
+      ? (session?.nombre || session?.user?.nombre || session?.email || session?.user?.email)
+      : (session?.email || session?.user?.email || "tiendaweb"),
   };
   const payload = {
     cliente,
